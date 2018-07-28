@@ -3,7 +3,7 @@
 -- Created 1:11 2018-7-22
 --------------------------------------------------
 
-local chillpenguinAPI={};
+local chillpenguin={};
 local particles = API.load("particles");
 local pNPC = API.load("pnpc");
 local rng = API.load("rng");
@@ -11,71 +11,71 @@ local rng = API.load("rng");
 local atkarray = 0;
 local slidearray = 0;
 local npchurtindex = 0;
-local PARAM = {};
+local chillpenguin = {};
 local players = {};
 
 -------------------
 --BEHAVIOUR STUFF--
 -------------------
 --The NPC ID for chill penguino
-PARAM.PENGID = 1; --smb3 goomba
+chillpenguin.PENGID = 1; --smb3 goomba
 --The NPC ID for the ice ball
-PARAM.ICEBALLID = 2; -- smb3 red goomba
+chillpenguin.ICEBALLID = 2; -- smb3 red goomba
 --The NPC ID of the ice statue
-PARAM.STATUEID = 27; --smb blue goomba
+chillpenguin.STATUEID = 27; --smb blue goomba
 --The BGO ID of the pully for his blizzard attack
-PARAM.PULLYID = 152;
+chillpenguin.PULLYID = 152;
 --physics width
-PARAM.WIDTH = 60;
+chillpenguin.WIDTH = 60;
 --physics height
-PARAM.HEIGHT = 68;
+chillpenguin.HEIGHT = 68;
 --The gravity of the npc
-PARAM.GRAVITY = 1.25;
+chillpenguin.GRAVITY = 1.25;
 --The gravity of the npc in water
-PARAM.GRAVITYW = 0.66;
+chillpenguin.GRAVITYW = 0.66;
 --the friction of chill penguin on the ground
-PARAM.FRICTION = 8;
+chillpenguin.FRICTION = 8;
 --the friction of chill penguin when in water and on the ground
-PARAM.FRICTIONWATER = 4;
+chillpenguin.FRICTIONWATER = 4;
 --the friction of chill penguin when in the air
-PARAM.FRICTIONAIR = 0.02;
+chillpenguin.FRICTIONAIR = 0.02;
 --the friction of chill penguin when in water and in the air
-PARAM.FRICTIONWATERAIR = 0.01;
+chillpenguin.FRICTIONWATERAIR = 0.01;
 --the friction of chill penguin when sliding on the ground
-PARAM.FRICTIONSLIDE = 0.04;
+chillpenguin.FRICTIONSLIDE = 0.04;
 --the friction of chill penguin when sliding on the ground in water
-PARAM.FRICTIONSLIDEWATER = 0.01;
+chillpenguin.FRICTIONSLIDEWATER = 0.01;
 --controls if chill penguin is knocked backwards or in a random direction when flinching
---PARAM.HURTRNDDIR = {1, 0}
+--chillpenguin.HURTRNDDIR = {1, 0}
 --1 = random direction when hurt
 --0 = gets knocked backwards
-PARAM.HURTRNDDIR = {0, 0};
+chillpenguin.HURTRNDDIR = {0, 0};
 --controls the ratio of which attacks chill penguin will use
 -- 1 = jump
 -- 2 = slide
 -- 3 = iceball attack
 -- 4 = ice breath attack
 -- 5 = jumps for the pully to use the blizzard (if he can't find one he'll simply jump to the player)
-PARAM.ATTACKRATIO = {1, 2, 3, 4, 5};
+chillpenguin.ATTACKRATIO = {1, 2, 3, 4, 5};
 --The jump height used by its leap attack
-PARAM.JUMPHEIGHT = -14;
+chillpenguin.JUMPHEIGHT = -14;
 --The jump height used by its leap attack in water
-PARAM.JUMPHEIGHTW = -7;
+chillpenguin.JUMPHEIGHTW = -7;
 --Controls how far chill penguin goes when jumping relative to where its trying to land
-PARAM.JUMPDISTMULT = 0.015;
+chillpenguin.JUMPDISTMULT = 0.015;
 --Same as above but for when in water
-PARAM.JUMPDISTMULTW = 0.01;
+chillpenguin.JUMPDISTMULTW = 0.01;
 --the maximum distance chill penguin will search to find the player before jumping
 --note 32 = 1 block
-PARAM.JUMPSEARCHDIST = 640;
+chillpenguin.JUMPSEARCHDIST = 640;
 --the speed that chill penguin starts at when using its slide attack
-PARAM.SLIDESPEED = 10;
+chillpenguin.SLIDESPEED = 10;
 --the speed that chill penguin starts at when using its slide attack under water
-PARAM.SLIDESPEEDW = 5;
+chillpenguin.SLIDESPEEDW = 5;
 --once chill penguin's velocity is less than this it stops using its slide attack
-PARAM.SLIDESTOP = 4;
+chillpenguin.SLIDESTOP = 4;
 --same as above but when in water
-PARAM.SLIDESTOPW = 3;
+chillpenguin.SLIDESTOPW = 3;
 --List of blocks that chill penguin can break when it runs into one during a slide
 --  4 = smb3 brick
 --  60 = smb blue brick
@@ -83,69 +83,69 @@ PARAM.SLIDESTOPW = 3;
 -- 188 = smb brick
 -- 226 = smb3 big brick
 -- 293 = smb2 stone
-PARAM.SLIDEBREAKER = {4, 60, 90, 188, 226, 293};
+chillpenguin.SLIDEBREAKER = {4, 60, 90, 188, 226, 293};
 --the range of ice balls chill penguin can shoot
 -- 2, 4 = shoots 2-4 ice balls when performing the attack before using its next attack
-PARAM.ICEBALL = {4, 4};
+chillpenguin.ICEBALL = {4, 4};
 --speed of the iceball
-PARAM.ICEBALLSPDX = 5;
+chillpenguin.ICEBALLSPDX = 5;
 --speed of the iceball when it's on the ground
-PARAM.ICEBALLSPDFLOORX = 4;
+chillpenguin.ICEBALLSPDFLOORX = 4;
 --the speed multiplier when the ice ball is in water
-PARAM.ICEBALLWATERXMULT = 0.5;
+chillpenguin.ICEBALLWATERXMULT = 0.5;
 --blizzard's push strength
-PARAM.BLIZPOW = 0.4;
+chillpenguin.BLIZPOW = 0.4;
 --how long the blizzard lasts for
-PARAM.BLIZDUR = 180;
+chillpenguin.BLIZDUR = 180;
 --how high up chill penguin will search for a pully
 --32 = 1 block
-PARAM.PULLSEARCHDISTY = 352;
+chillpenguin.PULLSEARCHDISTY = 352;
 --same as the above but for when in water
-PARAM.PULLSEARCHDISTYW = 192;
+chillpenguin.PULLSEARCHDISTYW = 192;
 --how long chill penguin holds the pully
-PARAM.PULLYDUR = 100;
+chillpenguin.PULLYDUR = 100;
 --how long chill penguin's ice breath lasts for
-PARAM.ICEBREATHDUR = 122;
+chillpenguin.ICEBREATHDUR = 122;
 --ice statue's max hp
-PARAM.STATUEMAXHP = 4;
+chillpenguin.STATUEMAXHP = 4;
 --speed multiplier for statues when in water
-PARAM.STATUEWATERXMULT = 0.5;
+chillpenguin.STATUEWATERXMULT = 0.5;
 --If chill penguin gets frozen this is how long until it'll break out
-PARAM.FROZENDUR = 198;
+chillpenguin.FROZENDUR = 198;
 --determines if the health bar should be displayed
--- PARAM.USEHEALTHBAR = {0, 1};
+-- chillpenguin.USEHEALTHBAR = {0, 1};
 -- 0 == disabled if not set to boss
 -- 1 == enabled if set to boss
-PARAM.USEHEALTHBAR = {0, 1};
+chillpenguin.USEHEALTHBAR = {0, 1};
 --determines if chill penguin can despawn when off screen
--- PARAM.DESPAWN = {1 , 0};
+-- chillpenguin.DESPAWN = {1 , 0};
 -- 1 == can despawn if not set to boss
 -- 0 == can't despawn if set to boss
-PARAM.DESPAWN = {1 , 0};
+chillpenguin.DESPAWN = {1 , 0};
 
 ----------------
 --DAMAGE TABLE--
 ----------------
 
 --the npcs total hp
---PARAM.MAXHP = {10, 32};
+--chillpenguin.MAXHP = {10, 32};
 -- 10 hp when not set to boss
 -- 32 hp when set to boss
-PARAM.MAXHP = {10, 32};
+chillpenguin.MAXHP = {10, 32};
 --how long chill penguin is immune to damage when hurt
-PARAM.IFRAMES = 30;
+chillpenguin.IFRAMES = 30;
 --if enabled chill penguin will have infinite iframes during its hurt sprite
---once it lands on the ground it's iframes will last as long as param.iframes
-PARAM.AIRIFRAMES = true;
+--once it lands on the ground it's iframes will last as long as chillpenguin.iframes
+chillpenguin.AIRIFRAMES = true;
 
---PARAM.DMG_STOMP = {2, 0, 1, 2, 0, 1}
+--chillpenguin.DMG_STOMP = {2, 0, 1, 2, 0, 1}
 --this means it takes
 --2 damage when jumped on in most situations
 --0 damage when jumped on when sliding
 --1 damage when using its ice breath attack
 --the three values after it is the same except when it's set to boss in the editor
 
---PARAM.FLINCHDMG = {2, 3, 3, 2, -1, 3};
+--chillpenguin.FLINCHDMG = {2, 3, 3, 2, -1, 3};
 --flinches when taking 2 or more damage in most situations
 --flinches when taking 3 or more damage while sliding
 --flinches when taking 3 or more damage during its ice breath attack
@@ -153,60 +153,60 @@ PARAM.AIRIFRAMES = true;
 -- -1 makes it never flinch from damage
 
 --damage taken when stomped
-PARAM.DMG_STOMP = {2, 0, 2, 2, 0, 2};
+chillpenguin.DMG_STOMP = {2, 0, 2, 2, 0, 2};
 --damage taken when hit underneath by a block
-PARAM.DMG_BUMP = {1, 0, 1, 0, 0, 0};
+chillpenguin.DMG_BUMP = {1, 0, 1, 0, 0, 0};
 --damage taken when hit by a projectile
-PARAM.DMG_PROJ = {2, 0, 2, 1, 0, 1};
+chillpenguin.DMG_PROJ = {2, 0, 2, 1, 0, 1};
 --damage taken when this npc is thrown into another
-PARAM.DMG_SELF = {4, 4, 4, 2, 2, 2};
+chillpenguin.DMG_SELF = {4, 4, 4, 2, 2, 2};
 --damage taken when this npc touches lava
-PARAM.DMG_LAVA = {5, 2, 5, 3, 1, 3};
+chillpenguin.DMG_LAVA = {5, 2, 5, 3, 1, 3};
 --damage taken when hit by a tanooki tail
-PARAM.DMG_TAIL = {2, 0, 2, 1, 0, 1};
+chillpenguin.DMG_TAIL = {2, 0, 2, 1, 0, 1};
 --damage taken when hit by a spin jump
-PARAM.DMG_SPIN = {3, 0, 3, 2, 0, 2};
+chillpenguin.DMG_SPIN = {3, 0, 3, 2, 0, 2};
 --damage taken by link's sword and sword beams
-PARAM.DMG_SWORD = {3, 1, 3, 3, 0, 3};
+chillpenguin.DMG_SWORD = {3, 1, 3, 3, 0, 3};
 --if an attack does this amount or more, make chill penguin flinch
-PARAM.FLINCHDMG = {2, 3, 3, 2, -1, 3};
+chillpenguin.FLINCHDMG = {2, 3, 3, 2, -1, 3};
 
 -------------------
 --ANIMATION STUFF--
 -------------------
 --how many frames between each frame for the idle animation
-PARAM.IDLESPD = 10;
+chillpenguin.IDLESPD = 10;
 --the frameno for when chill penguin is falling, uses the frame after it for when facing right
-PARAM.FALLFRAME = 14;
+chillpenguin.FALLFRAME = 14;
 --the frameno for when chill penguin is airborne going upwards, uses the frame after for facing right
-PARAM.RISEFRAME = 12;
+chillpenguin.RISEFRAME = 12;
 --the starting frame when chill penguin telegraphs his jump
 --uses 2 frames
 --4 in total if you count both direction frames
-PARAM.JUMPFRAME = 8;
+chillpenguin.JUMPFRAME = 8;
 --the frameno of when chill penguin is hurt
-PARAM.HURTFRAME = 16
+chillpenguin.HURTFRAME = 16
 --the starting frames when chill penguin telegraphs his slide, ice ball or ice breath attack
 --uses 2 frames
 --4 in total if you count both direction frames
-PARAM.PREFRAME = 18;
+chillpenguin.PREFRAME = 18;
 --the frames used by chill penguin's slide attack
 --the first frame is used when airborne
 --second when on the ground
 --4 in total if you count both direction frames
-PARAM.SLIDEFRAME = 22;
+chillpenguin.SLIDEFRAME = 22;
 --frames used when spiting and using ice breath
 --uses 2 frames
 --4 in total if you count both direction frames
-PARAM.SPITFRAME = 26;
+chillpenguin.SPITFRAME = 26;
 --frame to use when holding the pully
 --the next frame is used when facing right
-PARAM.PULLYFRAME = 30;
+chillpenguin.PULLYFRAME = 30;
 --offsets the pullyframe
----PARAM.PULLYOFFSET{10, 4}
+---chillpenguin.PULLYOFFSET{10, 4}
 -- 10 = moves sprite 10 to the direction its facing
 -- 4 = moves sprite 4 downward
-PARAM.PULLYOFFSET = {4, 48};
+chillpenguin.PULLYOFFSET = {4, 48};
 
 ---------------
 --ARRAY STUFF--
@@ -324,23 +324,23 @@ local fbr = Graphics.loadImage("1rdeepbreath.gif");
 local hpboarder = Graphics.loadImage("hpconchill.gif");
 local hpfill = Graphics.loadImage("hpfillchill.gif");
 
-function chillpenguinAPI.onInitAPI()
-    registerEvent(chillpenguinAPI, "onStart", "onStart");
-    registerEvent(chillpenguinAPI, "onTick", "onTick");
-    registerEvent(chillpenguinAPI, "onCameraUpdate", "onCameraUpdate");
-    registerEvent(chillpenguinAPI, "onNPCKill", "onNPCKill");
+function chillpenguin.onInitAPI()
+    registerEvent(chillpenguin, "onStart", "onStart");
+    registerEvent(chillpenguin, "onTick", "onTick");
+    registerEvent(chillpenguin, "onCameraUpdate", "onCameraUpdate");
+    registerEvent(chillpenguin, "onNPCKill", "onNPCKill");
 end
 
 -- Run code on level start
-function chillpenguinAPI.onStart()
-	PARAM.GRAVITY = PARAM.GRAVITY - 1.0;
-	PARAM.GRAVITYW = PARAM.GRAVITYW - 1.0;
-	for index, val in pairs(PARAM.ATTACKRATIO) do
+function chillpenguin.onStart()
+	chillpenguin.GRAVITY = chillpenguin.GRAVITY - 1.0;
+	chillpenguin.GRAVITYW = chillpenguin.GRAVITYW - 1.0;
+	for index, val in pairs(chillpenguin.ATTACKRATIO) do
 		if val ~= nil then
 			atkarray = atkarray+1;
 		end
 	end
-	for index, val in pairs(PARAM.SLIDEBREAKER) do
+	for index, val in pairs(chillpenguin.SLIDEBREAKER) do
 		if val ~= nil then
 			slidearray = slidearray+1;
 		end
@@ -352,7 +352,7 @@ blizzardl:AttachToCamera(Camera.get()[1]);
 local blizzardr = particles.Emitter(0, 0, Misc.resolveFile("particles/p_blizzardr.ini"));
 blizzardr:AttachToCamera(Camera.get()[1]);
 
-function chillpenguinAPI.onCameraUpdate()
+function chillpenguin.onCameraUpdate()
 	if Defines.levelFreeze == false then
 		for section, duration in pairs(blizdur) do
 			if blizdur[section] >= 1 then
@@ -380,26 +380,26 @@ function chillpenguinAPI.onCameraUpdate()
 	end
 end
 
-function chillpenguinAPI.onTick()
+function chillpenguin.onTick()
 	validateplayers();
 	if npctable[npchurtindex] ~= nil and  npctable[npchurtindex].isValid then
 		Graphics.drawImage(hpboarder, 740, 120);
 		if npchealth[npchurtindex] >= 1 then
 			local healthoffset = 126;
 			if npctable[npchurtindex].legacyBoss then
-				healthoffset = healthoffset-(126*(npchealth[npchurtindex]/PARAM.MAXHP[2]))
+				healthoffset = healthoffset-(126*(npchealth[npchurtindex]/chillpenguin.MAXHP[2]))
 			else
-				healthoffset = healthoffset-(126*(npchealth[npchurtindex]/PARAM.MAXHP[1]))
+				healthoffset = healthoffset-(126*(npchealth[npchurtindex]/chillpenguin.MAXHP[1]))
 			end
 			Graphics.drawImage(hpfill, 748, 128+healthoffset, 0, 0, 12, 126-healthoffset);
 		end
 	end
-	for k, v in pairs(NPC.get({PARAM.ICEBALLID, PARAM.STATUEID}, {players[1].section, players[2].section})) do
+	for k, v in pairs(NPC.get({chillpenguin.ICEBALLID, chillpenguin.STATUEID}, {players[1].section, players[2].section})) do
 		if projisknown(v) == false and isvalidnpc(v) then
 			assignproj(v);
 		end
 	end
-	for k, v in pairs(NPC.get(PARAM.PENGID, {players[1].section, players[2].section})) do
+	for k, v in pairs(NPC.get(chillpenguin.PENGID, {players[1].section, players[2].section})) do
 		if npcisknown(v) == false and isvalidnpc(v) then
 			assignnpc(v);
 		end
@@ -413,9 +413,9 @@ function chillpenguinAPI.onTick()
 			--BEHAVIOUR CODE--
 			------------------
 			if npc:mem(0x146, FIELD_WORD) == player.section then
-				if npc.legacyBoss and PARAM.DESPAWN[2] == 0 then
+				if npc.legacyBoss and chillpenguin.DESPAWN[2] == 0 then
 					npc:mem(0x12A, FIELD_WORD, 180);
-				elseif npc.legacyBoss == false and PARAM.DESPAWN[1] == 0 then
+				elseif npc.legacyBoss == false and chillpenguin.DESPAWN[1] == 0 then
 					npc:mem(0x12A, FIELD_WORD, 180);
 				end
 			end
@@ -442,20 +442,20 @@ function chillpenguinAPI.onTick()
 								npctimeaction[index] = npctimeaction[index]-1;
 							else
 								local rand = rng.randomInt(1, atkarray);
-								if PARAM.ATTACKRATIO[rand] == 1 then
+								if chillpenguin.ATTACKRATIO[rand] == 1 then
 									npcmovetype[index] = 0;
 									setstate(index, npc, 2);
-								elseif PARAM.ATTACKRATIO[rand] == 2 then
+								elseif chillpenguin.ATTACKRATIO[rand] == 2 then
 									npcmovetype[index] = 1;
 									setstate(index, npc, 3);
-								elseif PARAM.ATTACKRATIO[rand] == 3 then
+								elseif chillpenguin.ATTACKRATIO[rand] == 3 then
 									npcmovetype[index] = 2;
-									npcballcount[index] = rng.randomInt(PARAM.ICEBALL[1], PARAM.ICEBALL[2]);
+									npcballcount[index] = rng.randomInt(chillpenguin.ICEBALL[1], chillpenguin.ICEBALL[2]);
 									setstate(index, npc, 3);
-								elseif PARAM.ATTACKRATIO[rand] == 4 then
+								elseif chillpenguin.ATTACKRATIO[rand] == 4 then
 									npcmovetype[index] = 3;
 									setstate(index, npc, 3);
-								elseif PARAM.ATTACKRATIO[rand] == 5 then
+								elseif chillpenguin.ATTACKRATIO[rand] == 5 then
 									npcmovetype[index] = 4;
 									setstate(index, npc, 2);
 								end
@@ -466,8 +466,8 @@ function chillpenguinAPI.onTick()
 						else
 							if npcmovetype[index] == 4 and (touchedpully(index, npc, false) ~= nil and npcprimemove[index] <= 0) or npcmovetype[index] == 4 and (touchedpully(index, npc, true) ~=nil and npcprimemove[index] >= 0) then
 								if  npcprimemove[index] <= 0 then
-									npcprimemove[index] = PARAM.PULLYDUR;
-									blizdur[getnpcsection(npc)+1] = PARAM.BLIZDUR;
+									npcprimemove[index] = chillpenguin.PULLYDUR;
+									blizdur[getnpcsection(npc)+1] = chillpenguin.BLIZDUR;
 									blizdir[getnpcsection(npc)+1] = npcdirection[index];
 								elseif npcprimemove[index] >= 1 then
 									npcprimemove[index] = npcprimemove[index]-1;
@@ -475,11 +475,11 @@ function chillpenguinAPI.onTick()
 									npc.speedY = 0;
 									npctouchedpully[index] = touchedpully(index, npc, true);
 									if npcdirection[index] == -1 then
-										npc.x = npctouchedpully[index].x+PARAM.PULLYOFFSET[1];
+										npc.x = npctouchedpully[index].x+chillpenguin.PULLYOFFSET[1];
 									elseif npcdirection[index] == 1 then
-										npc.x = (npctouchedpully[index].x-PARAM.WIDTH*0.45)-PARAM.PULLYOFFSET[1];
+										npc.x = (npctouchedpully[index].x-chillpenguin.WIDTH*0.45)-chillpenguin.PULLYOFFSET[1];
 									end
-									npc.y = npctouchedpully[index].y+PARAM.PULLYOFFSET[2];
+									npc.y = npctouchedpully[index].y+chillpenguin.PULLYOFFSET[2];
 									if npcprimemove[index] <= 0 then
 										npcmovetype[index] = 0;
 									end
@@ -509,9 +509,9 @@ function chillpenguinAPI.onTick()
 						end
 					elseif npcstate[index] == 4 then
 						if npc.collidesBlockBottom then
-							local stopspeed = PARAM.SLIDESTOP;
+							local stopspeed = chillpenguin.SLIDESTOP;
 							if npc.underwater then
-								stopspeed = PARAM.SLIDESTOPW;
+								stopspeed = chillpenguin.SLIDESTOPW;
 							end
 							if npcdirection[index] == -1 and npcxvel[index] > stopspeed*-1 then
 								setstate(index, npc, 1);
@@ -558,17 +558,17 @@ function chillpenguinAPI.onTick()
 						if npchurt[index] >= 0 or heldplayer ~= nil then
 							if heldplayer == nil then
 								if npcdirection[index] == -1 then
-									npclastframe[index] = PARAM.HURTFRAME;
+									npclastframe[index] = chillpenguin.HURTFRAME;
 									npc.animationFrame = npclastframe[index];
 								elseif npcdirection[index] == 1 then
-									npclastframe[index] = PARAM.HURTFRAME+1;
+									npclastframe[index] = chillpenguin.HURTFRAME+1;
 									npc.animationFrame = npclastframe[index];
 								end
 							elseif getplayerdirection(heldplayer) == -1 then
-								npclastframe[index] = PARAM.HURTFRAME;
+								npclastframe[index] = chillpenguin.HURTFRAME;
 								npc.animationFrame = npclastframe[index];
 							elseif getplayerdirection(heldplayer) == 1 then
-								npclastframe[index] = PARAM.HURTFRAME+1;
+								npclastframe[index] = chillpenguin.HURTFRAME+1;
 								npc.animationFrame = npclastframe[index];
 							end
 						else
@@ -579,38 +579,38 @@ function chillpenguinAPI.onTick()
 									end
 									npclastframe[index] = npclastframe[index]+1;
 									npc.animationFrame = npclastframe[index];
-									npctimeframe[index] = PARAM.IDLESPD;
+									npctimeframe[index] = chillpenguin.IDLESPD;
 								elseif npcdirection[index] == 1 and npctimeframe[index] <= 0 then
 									if npclastframe[index] >= 7 or npclastframe[index] <= 3 then
 										npclastframe[index] = 3;
 									end
 									npclastframe[index] = npclastframe[index]+1;
 									npc.animationFrame = npclastframe[index];
-									npctimeframe[index] = PARAM.IDLESPD;
+									npctimeframe[index] = chillpenguin.IDLESPD;
 								end
 							else
 								if npcmovetype[index] == 4 and npcprimemove[index] >= 0 then
 									if npcdirection[index] == -1 then
-										npclastframe[index] = PARAM.PULLYFRAME;
+										npclastframe[index] = chillpenguin.PULLYFRAME;
 										npc.animationFrame = npclastframe[index];
 									elseif npcdirection[index] == 1 then
-										npclastframe[index] = PARAM.PULLYFRAME+1;
+										npclastframe[index] = chillpenguin.PULLYFRAME+1;
 										npc.animationFrame = npclastframe[index];
 									end
 								elseif npc.speedY < 0 then
 									if npcdirection[index] == -1 then
-										npclastframe[index] = PARAM.RISEFRAME;
+										npclastframe[index] = chillpenguin.RISEFRAME;
 										npc.animationFrame = npclastframe[index];
 									elseif npcdirection [index] == 1 then
-										npclastframe[index] = PARAM.RISEFRAME+1;
+										npclastframe[index] = chillpenguin.RISEFRAME+1;
 										npc.animationFrame = npclastframe[index];
 									end
 								elseif npc.speedY > 0 then
 									if npcdirection[index] == -1 then
-										npclastframe[index] = PARAM.FALLFRAME;
+										npclastframe[index] = chillpenguin.FALLFRAME;
 										npc.animationFrame = npclastframe[index];
 									elseif npcdirection [index] == 1 then
-										npclastframe[index] = PARAM.FALLFRAME+1;
+										npclastframe[index] = chillpenguin.FALLFRAME+1;
 										npc.animationFrame = npclastframe[index];
 									end
 								end
@@ -619,63 +619,63 @@ function chillpenguinAPI.onTick()
 					elseif npcstate[index] == 2 then
 						if npctimeframe[index] <= 0 then
 							if npcdirection[index] == -1 then
-								npclastframe[index] = PARAM.JUMPFRAME+1;
+								npclastframe[index] = chillpenguin.JUMPFRAME+1;
 								npc.animationFrame = npclastframe[index];
 							elseif npcdirection[index] == 1 then
-								npclastframe[index] = PARAM.JUMPFRAME+3;
+								npclastframe[index] = chillpenguin.JUMPFRAME+3;
 								npc.animationFrame = npclastframe[index];
 							end
 						end
 					elseif npcstate[index] == 3 then
 						if npctimeframe[index] <= 0 then
 							if npcdirection[index] == -1 then
-								npclastframe[index] = PARAM.PREFRAME+1;
+								npclastframe[index] = chillpenguin.PREFRAME+1;
 								npc.animationFrame = npclastframe[index];
 							elseif npcdirection[index] == 1 then
-								npclastframe[index] = PARAM.PREFRAME+3;
+								npclastframe[index] = chillpenguin.PREFRAME+3;
 								npc.animationFrame = npclastframe[index];
 							end
 						end
 					elseif npcstate[index] == 4 then
 						if npc.collidesBlockBottom then
 							if npcdirection[index] == -1 then
-								npclastframe[index] = PARAM.SLIDEFRAME+1;
+								npclastframe[index] = chillpenguin.SLIDEFRAME+1;
 								npc.animationFrame = npclastframe[index];
 							elseif npcdirection[index] == 1 then
-								npclastframe[index] = PARAM.SLIDEFRAME+3;
+								npclastframe[index] = chillpenguin.SLIDEFRAME+3;
 								npc.animationFrame = npclastframe[index];
 							end
 						else
 							if npcdirection[index] == -1 then
-								npclastframe[index] = PARAM.SLIDEFRAME;
+								npclastframe[index] = chillpenguin.SLIDEFRAME;
 								npc.animationFrame = npclastframe[index];
 							elseif npcdirection[index] == 1 then
-								npclastframe[index] = PARAM.SLIDEFRAME+2;
+								npclastframe[index] = chillpenguin.SLIDEFRAME+2;
 								npc.animationFrame = npclastframe[index];
 							end
 						end
 					elseif npcstate[index] == 5 then
 						if npctimeframe[index] <= 0 then
 							if npcdirection[index] == -1 then
-								npclastframe[index] = PARAM.SPITFRAME+1;
+								npclastframe[index] = chillpenguin.SPITFRAME+1;
 								npc.animationFrame = npclastframe[index];
 							elseif npcdirection[index] == 1 then
-								npclastframe[index] = PARAM.SPITFRAME+3;
+								npclastframe[index] = chillpenguin.SPITFRAME+3;
 								npc.animationFrame = npclastframe[index];
 							end
 						end
 					elseif npcstate[index] == 6 then
 						if npctimeframe[index] <= 0 then
 							if npcdirection[index] == -1 then
-								if npclastframe[index] >= PARAM.SPITFRAME+1 or npclastframe[index] <= PARAM.SPITFRAME-1 then
-									npclastframe[index] = PARAM.SPITFRAME-1;
+								if npclastframe[index] >= chillpenguin.SPITFRAME+1 or npclastframe[index] <= chillpenguin.SPITFRAME-1 then
+									npclastframe[index] = chillpenguin.SPITFRAME-1;
 								end
 								npclastframe[index] = npclastframe[index]+1;
 								npc.animationFrame = npclastframe[index];
 								npctimeframe[index] = 5;
 							elseif npcdirection[index] == 1 then
-								if npclastframe[index] >= PARAM.SPITFRAME+3 or npclastframe[index] <= PARAM.SPITFRAME+1 then
-									npclastframe[index] = PARAM.SPITFRAME+1;
+								if npclastframe[index] >= chillpenguin.SPITFRAME+3 or npclastframe[index] <= chillpenguin.SPITFRAME+1 then
+									npclastframe[index] = chillpenguin.SPITFRAME+1;
 								end
 								npclastframe[index] = npclastframe[index]+1;
 								npc.animationFrame = npclastframe[index];
@@ -694,7 +694,7 @@ function chillpenguinAPI.onTick()
 				if Defines.levelFreeze == false then
 					if npc.id == 263 then
 						if npcfrozentime[index] <= -1 then
-							npcfrozentime[index] = PARAM.FROZENDUR;
+							npcfrozentime[index] = chillpenguin.FROZENDUR;
 						elseif npcfrozentime[index] >= 66 then
 							npcfrozentime[index] = npcfrozentime[index]-1;
 						elseif npcfrozentime[index] >= 1 then
@@ -705,7 +705,7 @@ function chillpenguinAPI.onTick()
 								npc.x = npc.x-3;
 							end
 						else
-							npc.id = PARAM.PENGID;
+							npc.id = chillpenguin.PENGID;
 							npcfrozentime[index] = -1;
 						end
 					end
@@ -727,52 +727,52 @@ function chillpenguinAPI.onTick()
 				if projdead[index] then
 					proj:harm();
 				else
-					if proj.id == PARAM.ICEBALLID then
+					if proj.id == chillpenguin.ICEBALLID then
 						if projstate[index] == 1 then
 							--upward
 							if proj.collidesBlockBottom then
 								if projdirection[index] == -1 then
-									projxvel[index] = PARAM.ICEBALLSPDFLOORX*-1;
+									projxvel[index] = chillpenguin.ICEBALLSPDFLOORX*-1;
 								elseif projdirection[index] == 1 then
-									projxvel[index] = PARAM.ICEBALLSPDFLOORX;
+									projxvel[index] = chillpenguin.ICEBALLSPDFLOORX;
 								end
 							else
 								if projdirection[index] == -1 then
-									projxvel[index] = PARAM.ICEBALLSPDX*-1;
+									projxvel[index] = chillpenguin.ICEBALLSPDX*-1;
 								elseif projdirection[index] == 1 then
-									projxvel[index] = PARAM.ICEBALLSPDX;
+									projxvel[index] = chillpenguin.ICEBALLSPDX;
 								end
 							end
 							if proj.underwater then
-								projxvel[index] = projxvel[index]*PARAM.ICEBALLWATERXMULT;
+								projxvel[index] = projxvel[index]*chillpenguin.ICEBALLWATERXMULT;
 							end
 						elseif projstate[index] == 2 then
 							--moving forward
 							if projdirection[index] == -1 then
-								projxvel[index] = PARAM.ICEBALLSPDX*-1;
+								projxvel[index] = chillpenguin.ICEBALLSPDX*-1;
 							elseif projdirection[index] == 1 then
-								projxvel[index] = PARAM.ICEBALLSPDX;
+								projxvel[index] = chillpenguin.ICEBALLSPDX;
 							end
 							if proj.underwater then
 								proj.speedY = -0.05;
-								projxvel[index] = projxvel[index]*PARAM.ICEBALLWATERXMULT;
+								projxvel[index] = projxvel[index]*chillpenguin.ICEBALLWATERXMULT;
 							else
 								proj.speedY = -0.265;
 							end
 						end
-					elseif proj.id == PARAM.STATUEID then
+					elseif proj.id == chillpenguin.STATUEID then
 						if blizdur[getnpcsection(proj)+1] >= 1 then
 							if blizdir[getnpcsection(proj)+1] == -1 then
 								if proj.underwater then
-									projxvel[index] = projxvel[index]-(PARAM.BLIZPOW*PARAM.STATUEWATERXMULT);
+									projxvel[index] = projxvel[index]-(chillpenguin.BLIZPOW*chillpenguin.STATUEWATERXMULT);
 								else
-									projxvel[index] = projxvel[index]-PARAM.BLIZPOW;
+									projxvel[index] = projxvel[index]-chillpenguin.BLIZPOW;
 								end
 							elseif blizdir[getnpcsection(proj)+1] == 1 then
 								if proj.underwater then
-									projxvel[index] = projxvel[index]+(PARAM.BLIZPOW*PARAM.STATUEWATERXMULT);
+									projxvel[index] = projxvel[index]+(chillpenguin.BLIZPOW*chillpenguin.STATUEWATERXMULT);
 								else
-									projxvel[index] = projxvel[index]+PARAM.BLIZPOW;
+									projxvel[index] = projxvel[index]+chillpenguin.BLIZPOW;
 								end
 							end
 						else
@@ -825,7 +825,7 @@ function chillpenguinAPI.onTick()
 	end
 end
 
-function chillpenguinAPI.onNPCKill(event, npc, reason)
+function chillpenguin.onNPCKill(event, npc, reason)
 	local index = getnpcindex(npc);
 	if index ~= nil and index >= 0 then
 		local hurtstate = npcstate[index];
@@ -841,43 +841,43 @@ function chillpenguinAPI.onNPCKill(event, npc, reason)
 		end
 		local healthpost = npchealth[index]
 		if reason == 1 then
-			npchealth[index] = npchealth[index] - PARAM.DMG_STOMP[hurtstate];
+			npchealth[index] = npchealth[index] - chillpenguin.DMG_STOMP[hurtstate];
 		elseif reason == 2 then
-			npchealth[index] = npchealth[index] - PARAM.DMG_BUMP[hurtstate];
+			npchealth[index] = npchealth[index] - chillpenguin.DMG_BUMP[hurtstate];
 		elseif reason == 3 or reason == 5 then
-			npchealth[index] = npchealth[index] - PARAM.DMG_PROJ[hurtstate];
+			npchealth[index] = npchealth[index] - chillpenguin.DMG_PROJ[hurtstate];
 		elseif reason == 4 then
-			npchealth[index] = npchealth[index] - PARAM.DMG_SELF[hurtstate];
+			npchealth[index] = npchealth[index] - chillpenguin.DMG_SELF[hurtstate];
 		elseif reason == 6 then
-			npchealth[index] = npchealth[index] - PARAM.DMG_LAVA[hurtstate];
+			npchealth[index] = npchealth[index] - chillpenguin.DMG_LAVA[hurtstate];
 		elseif reason == 7 then
-			npchealth[index] = npchealth[index] - PARAM.DMG_TAIL[hurtstate];
+			npchealth[index] = npchealth[index] - chillpenguin.DMG_TAIL[hurtstate];
 		elseif reason == 8 then
-			npchealth[index] = npchealth[index] - PARAM.DMG_SPIN[hurtstate];
+			npchealth[index] = npchealth[index] - chillpenguin.DMG_SPIN[hurtstate];
 		elseif reason == 10 then
-			npchealth[index] = npchealth[index] - PARAM.DMG_SWORD[hurtstate];
+			npchealth[index] = npchealth[index] - chillpenguin.DMG_SWORD[hurtstate];
 		end
-		if npc.legacyBoss and PARAM.USEHEALTHBAR[2] == 1 then
+		if npc.legacyBoss and chillpenguin.USEHEALTHBAR[2] == 1 then
 			npchurtindex = index;
-		elseif npc.legacyBoss ==false and PARAM.USEHEALTHBAR[1] == 1 then
+		elseif npc.legacyBoss ==false and chillpenguin.USEHEALTHBAR[1] == 1 then
 			npchurtindex = index;
 		end
 		if npchealth[index] >= 1 then
 			event.cancelled = true;
 			if npchealth[index] < healthpost then
-				if PARAM.FLINCHDMG[hurtstate] >= 0 and (healthpost-npchealth[index]) >= PARAM.FLINCHDMG[hurtstate] then
+				if chillpenguin.FLINCHDMG[hurtstate] >= 0 and (healthpost-npchealth[index]) >= chillpenguin.FLINCHDMG[hurtstate] then
 					--play hurt animation if taken more than or equal to the flinch amount
 					local throwdirection = 0
 					if npc.legacyBoss then
-						if PARAM.HURTRNDDIR[2] == 0 then
+						if chillpenguin.HURTRNDDIR[2] == 0 then
 							throwdirection = npcdirection[index];
-						elseif PARAM.HURTRNDDIR[2] == 1 then
+						elseif chillpenguin.HURTRNDDIR[2] == 1 then
 							throwdirection = rng.randomInt(0, 1);
 						end
 					else
-						if PARAM.HURTRNDDIR[1] == 0 then
+						if chillpenguin.HURTRNDDIR[1] == 0 then
 							throwdirection = npcdirection[index];
-						elseif PARAM.HURTRNDDIR[1] == 1 then
+						elseif chillpenguin.HURTRNDDIR[1] == 1 then
 							throwdirection = rng.randomInt(0, 1);
 						end
 					end
@@ -896,13 +896,13 @@ function chillpenguinAPI.onNPCKill(event, npc, reason)
 					setstate(index, npc, 1);
 					npcmovetype[index] = 0;
 					npchurt[index] = 5;
-					if PARAM.AIRIFRAMES then
+					if chillpenguin.AIRIFRAMES then
 						npc:mem(0x156, FIELD_WORD, 999);
 					else
-						npc:mem(0x156, FIELD_WORD, PARAM.IFRAMES);
+						npc:mem(0x156, FIELD_WORD, chillpenguin.IFRAMES);
 					end
 				else
-					npc:mem(0x156, FIELD_WORD, PARAM.IFRAMES);
+					npc:mem(0x156, FIELD_WORD, chillpenguin.IFRAMES);
 				end
 			end
 		elseif npcdead[index] == false then
@@ -926,13 +926,13 @@ end
 --applies momentum to chill penguin
 function applyvel(index, npc)
 	if npcstate[index] == 4 then --sliding
-		local blocktable = Block.getIntersecting(npc.x-2, npc.y, npc.x+PARAM.WIDTH+2, npc.y+PARAM.HEIGHT);
+		local blocktable = Block.getIntersecting(npc.x-2, npc.y, npc.x+chillpenguin.WIDTH+2, npc.y+chillpenguin.HEIGHT);
 		for k, v in pairs(blocktable) do
 			--now we check if the block is whitelisted
 			if v.isHidden == false then
-				for arrayno, proj in pairs(PARAM.SLIDEBREAKER) do
+				for arrayno, proj in pairs(chillpenguin.SLIDEBREAKER) do
 					--if is then we break the block
-					if v.id == PARAM.SLIDEBREAKER[arrayno] then
+					if v.id == chillpenguin.SLIDEBREAKER[arrayno] then
 						hitblock = true;
 						v:remove(true);
 						break
@@ -953,10 +953,10 @@ function applyvel(index, npc)
 			end
 		end
 		
-		local statuetable = NPC.getIntersecting(npc.x-2, npc.y, npc.x+PARAM.WIDTH+2, npc.y+PARAM.HEIGHT);
+		local statuetable = NPC.getIntersecting(npc.x-2, npc.y, npc.x+chillpenguin.WIDTH+2, npc.y+chillpenguin.HEIGHT);
 		for k, v in pairs(statuetable) do
 			if v.isHidden == false then
-				if v.id == PARAM.STATUEID then
+				if v.id == chillpenguin.STATUEID then
 					local projindex = getprojindex(v);
 					projhealth[projindex] = 0;
 					v:harm();
@@ -974,7 +974,7 @@ end
 --applies momentum to chill penguin's projectile
 function applyprojvel(index, proj)
 	local stillvalid = true;
-	if proj.id == PARAM.ICEBALLID then
+	if proj.id == chillpenguin.ICEBALLID then
 		--probably hit a wall
 		if projlastxpos[index] == proj.x then
 			proj:harm();
@@ -983,14 +983,14 @@ function applyprojvel(index, proj)
 			local statuetable = NPC.getIntersecting(proj.x, proj.y, proj.x+24, proj.y+24);
 			for k, v in pairs(statuetable) do
 				if v.isHidden == false then
-					if v.id == PARAM.STATUEID then
+					if v.id == chillpenguin.STATUEID then
 						proj:harm();
 						stillvalid = false;
 					end
 				end
 			end
 		end
-	elseif proj.id == PARAM.STATUEID and projstate[index] == 1 then
+	elseif proj.id == chillpenguin.STATUEID and projstate[index] == 1 then
 		--probably hit a wall
 		if projlastxpos[index] == proj.x then
 			projhealth[index] = 0;
@@ -1013,56 +1013,56 @@ function calcnpcleap(index, npc)
 	end
 	if pullyx ~= nil then
 		if npc.underwater then
-			if npc.x+PARAM.WIDTH - pullyx >= 1 then
-				npcxvel[index] = (npc.x+PARAM.WIDTH - pullyx)*-PARAM.JUMPDISTMULTW;
+			if npc.x+chillpenguin.WIDTH - pullyx >= 1 then
+				npcxvel[index] = (npc.x+chillpenguin.WIDTH - pullyx)*-chillpenguin.JUMPDISTMULTW;
 				npcdirection[index] = -1;
 			elseif npc.x - pullyx <= 1 then
-				npcxvel[index] = (npc.x - pullyx)*-PARAM.JUMPDISTMULTW;
+				npcxvel[index] = (npc.x - pullyx)*-chillpenguin.JUMPDISTMULTW;
 				npcdirection[index] = 1;
 			end
-			npc.speedY = PARAM.JUMPHEIGHTW;
+			npc.speedY = chillpenguin.JUMPHEIGHTW;
 		else
-			if npc.x+PARAM.WIDTH - pullyx >= 1 then
-				npcxvel[index] = (npc.x+PARAM.WIDTH - pullyx)*-PARAM.JUMPDISTMULT;
+			if npc.x+chillpenguin.WIDTH - pullyx >= 1 then
+				npcxvel[index] = (npc.x+chillpenguin.WIDTH - pullyx)*-chillpenguin.JUMPDISTMULT;
 				npcdirection[index] = -1;
 			elseif npc.x - pullyx <= 1 then
-				npcxvel[index] = (npc.x - pullyx)*-PARAM.JUMPDISTMULT;
+				npcxvel[index] = (npc.x - pullyx)*-chillpenguin.JUMPDISTMULT;
 				npcdirection[index] = 1;
 			end
-			npc.speedY = PARAM.JUMPHEIGHT;
+			npc.speedY = chillpenguin.JUMPHEIGHT;
 		end
 	elseif pullyx == nil then
 		if npc.underwater then
 			if npcdirection[index] == 1 then
-				if npc.x+PARAM.WIDTH  -  npctarget[index].x >= 1 or npc.x+PARAM.WIDTH  -  npctarget[index].x < -PARAM.JUMPSEARCHDIST then
-					npcxvel[index] = rng.randomInt(2,(PARAM.JUMPSEARCHDIST*PARAM.JUMPDISTMULTW));
+				if npc.x+chillpenguin.WIDTH  -  npctarget[index].x >= 1 or npc.x+chillpenguin.WIDTH  -  npctarget[index].x < -chillpenguin.JUMPSEARCHDIST then
+					npcxvel[index] = rng.randomInt(2,(chillpenguin.JUMPSEARCHDIST*chillpenguin.JUMPDISTMULTW));
 				else
-					npcxvel[index] = (npc.x -  npctarget[index].x)*-PARAM.JUMPDISTMULTW;
+					npcxvel[index] = (npc.x -  npctarget[index].x)*-chillpenguin.JUMPDISTMULTW;
 				end
 			elseif npcdirection[index] == -1 then
-				if npc.x -  npctarget[index].x <= -1 or npc.x -  npctarget[index].x > PARAM.JUMPSEARCHDIST then
-					npcxvel[index] = rng.randomInt(-2,(PARAM.JUMPSEARCHDIST*-PARAM.JUMPDISTMULTW));
+				if npc.x -  npctarget[index].x <= -1 or npc.x -  npctarget[index].x > chillpenguin.JUMPSEARCHDIST then
+					npcxvel[index] = rng.randomInt(-2,(chillpenguin.JUMPSEARCHDIST*-chillpenguin.JUMPDISTMULTW));
 				else
-					npcxvel[index] = (npc.x -  npctarget[index].x)*-PARAM.JUMPDISTMULTW;
+					npcxvel[index] = (npc.x -  npctarget[index].x)*-chillpenguin.JUMPDISTMULTW;
 				end
 			end
-			npc.speedY = PARAM.JUMPHEIGHTW;
+			npc.speedY = chillpenguin.JUMPHEIGHTW;
 		else
 			if npcdirection[index] == 1 then
-				if npc.x+PARAM.WIDTH -  npctarget[index].x >= 1 or npc.x+PARAM.WIDTH  -  npctarget[index].x < -PARAM.JUMPSEARCHDIST then
-					npcxvel[index] = rng.randomInt(2,(PARAM.JUMPSEARCHDIST*PARAM.JUMPDISTMULT));
+				if npc.x+chillpenguin.WIDTH -  npctarget[index].x >= 1 or npc.x+chillpenguin.WIDTH  -  npctarget[index].x < -chillpenguin.JUMPSEARCHDIST then
+					npcxvel[index] = rng.randomInt(2,(chillpenguin.JUMPSEARCHDIST*chillpenguin.JUMPDISTMULT));
 				else
-					npcxvel[index] = (npc.x -  npctarget[index].x)*-PARAM.JUMPDISTMULT;
+					npcxvel[index] = (npc.x -  npctarget[index].x)*-chillpenguin.JUMPDISTMULT;
 				end
 			elseif npcdirection[index] == -1 then
-				if npc.x -  npctarget[index].x <= -1 or npc.x -  npctarget[index].x > PARAM.JUMPSEARCHDIST then
-					npcxvel[index] = rng.randomInt(-2,(PARAM.JUMPSEARCHDIST*-PARAM.JUMPDISTMULT));
+				if npc.x -  npctarget[index].x <= -1 or npc.x -  npctarget[index].x > chillpenguin.JUMPSEARCHDIST then
+					npcxvel[index] = rng.randomInt(-2,(chillpenguin.JUMPSEARCHDIST*-chillpenguin.JUMPDISTMULT));
 				else
-					npcxvel[index] = (npc.x -  npctarget[index].x)*-PARAM.JUMPDISTMULT;
+					npcxvel[index] = (npc.x -  npctarget[index].x)*-chillpenguin.JUMPDISTMULT;
 				end
 			end
 
-			npc.speedY = PARAM.JUMPHEIGHT;
+			npc.speedY = chillpenguin.JUMPHEIGHT;
 		end
 	end
 end
@@ -1074,14 +1074,14 @@ function calcnpcdirection(index, npc)
 			npcdirection[index] = -1;
 		end
 	elseif npcdirection[index] == -1 then
-		if npc.x+PARAM.WIDTH -  npctarget[index].x <= -1 then
+		if npc.x+chillpenguin.WIDTH -  npctarget[index].x <= -1 then
 			npcdirection[index] = 1;
 		end
 	end
 	if npchurt[index] <= 0 and npchurt[index] ~= -2 then
 		npchurt[index] = -2;
-		if PARAM.AIRIFRAMES then
-			npc:mem(0x156, FIELD_WORD, PARAM.IFRAMES);
+		if chillpenguin.AIRIFRAMES then
+			npc:mem(0x156, FIELD_WORD, chillpenguin.IFRAMES);
 		end
 		npctimeaction[index] = 20;
 	elseif npchurt[index] ~= -2 then
@@ -1101,47 +1101,47 @@ function calcmomentum(index, npc)
 		if npcstate[index] == 4 then
 			if npc.underwater then
 				if veldir == -1 then
-					npcxvel[index] = npcxvel[index]+PARAM.FRICTIONSLIDEWATER;
+					npcxvel[index] = npcxvel[index]+chillpenguin.FRICTIONSLIDEWATER;
 				elseif veldir == 1 then
-					npcxvel[index] = npcxvel[index]-PARAM.FRICTIONSLIDEWATER;
+					npcxvel[index] = npcxvel[index]-chillpenguin.FRICTIONSLIDEWATER;
 				end
 			else
 				if veldir == -1 then
-					npcxvel[index] = npcxvel[index]+PARAM.FRICTIONSLIDE;
+					npcxvel[index] = npcxvel[index]+chillpenguin.FRICTIONSLIDE;
 				elseif veldir == 1 then
-					npcxvel[index] = npcxvel[index]-PARAM.FRICTIONSLIDE;
+					npcxvel[index] = npcxvel[index]-chillpenguin.FRICTIONSLIDE;
 				end
 			end
 		else
 			if npc.underwater then
 				if veldir == -1 then
-					npcxvel[index] = npcxvel[index]+PARAM.FRICTIONWATER;
+					npcxvel[index] = npcxvel[index]+chillpenguin.FRICTIONWATER;
 				elseif veldir == 1 then
-					npcxvel[index] = npcxvel[index]-PARAM.FRICTIONWATER;
+					npcxvel[index] = npcxvel[index]-chillpenguin.FRICTIONWATER;
 				end
 			else
 				if veldir == -1 then
-					npcxvel[index] = npcxvel[index]+PARAM.FRICTION;
+					npcxvel[index] = npcxvel[index]+chillpenguin.FRICTION;
 				elseif veldir == 1 then
-					npcxvel[index] = npcxvel[index]-PARAM.FRICTION;
+					npcxvel[index] = npcxvel[index]-chillpenguin.FRICTION;
 				end
 			end
 		end
 	else
 		if npc.underwater then
 			if veldir == -1 then
-				npcxvel[index] = npcxvel[index]+PARAM.FRICTIONWATERAIR;
+				npcxvel[index] = npcxvel[index]+chillpenguin.FRICTIONWATERAIR;
 			elseif veldir == 1 then
-				npcxvel[index] = npcxvel[index]-PARAM.FRICTIONWATERAIR;
+				npcxvel[index] = npcxvel[index]-chillpenguin.FRICTIONWATERAIR;
 			end
-			npc.speedY = npc.speedY+(PARAM.GRAVITYW*(Defines.npc_grav*0.25));
+			npc.speedY = npc.speedY+(chillpenguin.GRAVITYW*(Defines.npc_grav*0.25));
 		else
 			if veldir == -1 then
-				npcxvel[index] = npcxvel[index]+PARAM.FRICTIONAIR;
+				npcxvel[index] = npcxvel[index]+chillpenguin.FRICTIONAIR;
 			elseif veldir == 1 then
-				npcxvel[index] = npcxvel[index]-PARAM.FRICTIONAIR;
+				npcxvel[index] = npcxvel[index]-chillpenguin.FRICTIONAIR;
 			end
-			npc.speedY = npc.speedY+(PARAM.GRAVITY*Defines.npc_grav);
+			npc.speedY = npc.speedY+(chillpenguin.GRAVITY*Defines.npc_grav);
 		end
 	end
 	if veldir == 1 and npcxvel[index] < 0 then
@@ -1155,7 +1155,7 @@ end
 function shootprojectile(index, npc)
 	local numbah = rng.randomInt(1, 2);
 	if npcdirection[index] == -1 then
-		local iceball = NPC.spawn(PARAM.ICEBALLID, npc.x-2, npc.y+6, npc:mem(0x146, FIELD_WORD));
+		local iceball = NPC.spawn(chillpenguin.ICEBALLID, npc.x-2, npc.y+6, npc:mem(0x146, FIELD_WORD));
 		iceball.direction = -1;
 		if numbah == 1 then
 			iceball.speedY = -2;
@@ -1163,7 +1163,7 @@ function shootprojectile(index, npc)
 			iceball.speedY = 0.1;
 		end
 	elseif npcdirection[index] == 1 then
-		local iceball = NPC.spawn(PARAM.ICEBALLID, npc.x+PARAM.WIDTH+2, npc.y+6, npc:mem(0x146, FIELD_WORD));
+		local iceball = NPC.spawn(chillpenguin.ICEBALLID, npc.x+chillpenguin.WIDTH+2, npc.y+6, npc:mem(0x146, FIELD_WORD));
 		iceball.direction = 1;
 		if numbah == 1 then
 			iceball.speedY = -2;
@@ -1184,18 +1184,18 @@ function setstate(index, npc, stateno)
 		npcprimemove[index] = 30;
 		npctimeframe[index] = 15;
 		if npcdirection[index] == -1 then
-			npc.animationFrame = PARAM.JUMPFRAME;
+			npc.animationFrame = chillpenguin.JUMPFRAME;
 		elseif npcdirection[index] == 1 then
-			npc.animationFrame = PARAM.JUMPFRAME+2;
+			npc.animationFrame = chillpenguin.JUMPFRAME+2;
 		end
 	elseif stateno == 3 then --priming attack
 		npcstate[index] = 3;
 		npcprimemove[index] = 30;
 		npctimeframe[index] = 15;
 		if npcdirection[index] == -1 then
-			npc.animationFrame = PARAM.PREFRAME;
+			npc.animationFrame = chillpenguin.PREFRAME;
 		elseif npcdirection[index] == 1 then
-			npc.animationFrame = PARAM.PREFRAME+2;
+			npc.animationFrame = chillpenguin.PREFRAME+2;
 		end
 	elseif stateno == 4 then --slide attack
 		npcstate[index] = 4;
@@ -1207,20 +1207,20 @@ function setstate(index, npc, stateno)
 		end
 		if npcdirection[index] == -1 then
 			npclastxpos[index] = npc.x + 1;
-			npc.animationFrame = PARAM.SLIDEFRAME;
+			npc.animationFrame = chillpenguin.SLIDEFRAME;
 			if npc.underwater then
-				npcxvel[index] = PARAM.SLIDESPEEDW*-1;
+				npcxvel[index] = chillpenguin.SLIDESPEEDW*-1;
 			else
-				npcxvel[index] = PARAM.SLIDESPEED*-1;
+				npcxvel[index] = chillpenguin.SLIDESPEED*-1;
 			end
 		elseif npcdirection[index] == 1 then
 			npclastxpos[index] = npc.x - 1;
-			npc.animationFrame = PARAM.SLIDEFRAME+2;
-			npcxvel[index] = PARAM.SLIDESPEED;
+			npc.animationFrame = chillpenguin.SLIDEFRAME+2;
+			npcxvel[index] = chillpenguin.SLIDESPEED;
 			if npc.underwater then
-				npcxvel[index] = PARAM.SLIDESPEEDW;
+				npcxvel[index] = chillpenguin.SLIDESPEEDW;
 			else
-				npcxvel[index] = PARAM.SLIDESPEED;
+				npcxvel[index] = chillpenguin.SLIDESPEED;
 			end
 		end
 	elseif stateno == 5 then --ice ball attack
@@ -1228,28 +1228,28 @@ function setstate(index, npc, stateno)
 		npcprimemove[index] = 20;
 		npctimeframe[index] = 10;
 		if npcdirection[index] == -1 then
-			npc.animationFrame = PARAM.SPITFRAME;
+			npc.animationFrame = chillpenguin.SPITFRAME;
 		elseif npcdirection[index] == 1 then
-			npc.animationFrame = PARAM.SPITFRAME+2;
+			npc.animationFrame = chillpenguin.SPITFRAME+2;
 		end
 	elseif stateno == 6 then --ice breath
 		npcstate[index] = 6;
-		npcprimemove[index] = PARAM.ICEBREATHDUR;
-		npcbreathdur[index] = PARAM.ICEBREATHDUR;
+		npcprimemove[index] = chillpenguin.ICEBREATHDUR;
+		npcbreathdur[index] = chillpenguin.ICEBREATHDUR;
 		npcbreathframe[index] = 1;
 		npcbreathdir[index] = npcdirection[index];
 		if npcdirection[index] == -1 then
 			npcbreathlocx[index] = npc.x;
 			npcbreathlocy[index] = npc.y+10;
 		elseif npcdirection[index] == 1 then
-			npcbreathlocx[index] = npc.x+PARAM.WIDTH;
+			npcbreathlocx[index] = npc.x+chillpenguin.WIDTH;
 			npcbreathlocy[index] = npc.y+10;
 		end
 		npctimeframe[index] = 10;
 		if npcdirection[index] == -1 then
-			npc.animationFrame = PARAM.SPITFRAME;
+			npc.animationFrame = chillpenguin.SPITFRAME;
 		elseif npcdirection[index] == 1 then
-			npc.animationFrame = PARAM.SPITFRAME+2;
+			npc.animationFrame = chillpenguin.SPITFRAME+2;
 		end
 	end
 end
@@ -1257,16 +1257,16 @@ end
 --finds and returns the location of a nearby pully
 --returns nil if it can't find one
 function locatepully(index, npc)
-	local ysearch = PARAM.PULLSEARCHDISTY;
+	local ysearch = chillpenguin.PULLSEARCHDISTY;
 	if npc.underwater then
-		ysearch = PARAM.PULLSEARCHDISTYW;
+		ysearch = chillpenguin.PULLSEARCHDISTYW;
 	end
-	ysearch = ysearch - PARAM.HEIGHT;
-	local blocktable = BGO.getIntersecting(npc.x-240, npc.y-ysearch, npc.x+PARAM.WIDTH+240, npc.y-PARAM.HEIGHT);
+	ysearch = ysearch - chillpenguin.HEIGHT;
+	local blocktable = BGO.getIntersecting(npc.x-240, npc.y-ysearch, npc.x+chillpenguin.WIDTH+240, npc.y-chillpenguin.HEIGHT);
 	for k, v in pairs(blocktable) do
 		if v.isHidden == false then
 			--we found it
-			if v.id == PARAM.PULLYID then
+			if v.id == chillpenguin.PULLYID then
 				return v.x+(v.width*0.5);
 			end
 		end
@@ -1279,13 +1279,13 @@ end
 function touchedpully(index, npc, offsetcheck)
 	local offsety = 0;
 	if offsetcheck then
-		offsety = PARAM.PULLYOFFSET[2];
+		offsety = chillpenguin.PULLYOFFSET[2];
 	end
-	local blocktable = BGO.getIntersecting(npc.x, npc.y+(offsety*-1), npc.x+PARAM.WIDTH, npc.y);
+	local blocktable = BGO.getIntersecting(npc.x, npc.y+(offsety*-1), npc.x+chillpenguin.WIDTH, npc.y);
 	for k, v in pairs(blocktable) do
 		if v.isHidden == false then
 			--we found it
-			if v.id == PARAM.PULLYID then
+			if v.id == chillpenguin.PULLYID then
 				return v;
 			end
 		end
@@ -1302,19 +1302,19 @@ function icebreath(index, npc)
 				npcbreathlocx[index] = npc.x;
 				npcbreathlocy[index] = npc.y+10;
 			elseif npcbreathdir[index] == 1 then
-				npcbreathlocx[index] = npc.x+PARAM.WIDTH;
+				npcbreathlocx[index] = npc.x+chillpenguin.WIDTH;
 				npcbreathlocy[index] = npc.y+10;
 			end
-			if npcbreathdur[index] == PARAM.ICEBREATHDUR*0.5 then
+			if npcbreathdur[index] == chillpenguin.ICEBREATHDUR*0.5 then
 				if npcbreathdir[index] == -1 then
-					local icestatue = NPC.spawn(PARAM.STATUEID, npcbreathlocx[index]-160, npcbreathlocy[index], npc:mem(0x146, FIELD_WORD));
+					local icestatue = NPC.spawn(chillpenguin.STATUEID, npcbreathlocx[index]-160, npcbreathlocy[index], npc:mem(0x146, FIELD_WORD));
 					icestatue.direction = npcbreathdir[index];
-					icestatue = NPC.spawn(PARAM.STATUEID, npcbreathlocx[index]-80, npcbreathlocy[index], npc:mem(0x146, FIELD_WORD));
+					icestatue = NPC.spawn(chillpenguin.STATUEID, npcbreathlocx[index]-80, npcbreathlocy[index], npc:mem(0x146, FIELD_WORD));
 					icestatue.direction = npcbreathdir[index];
 				elseif npcbreathdir[index] == 1 then
-					local icestatue = NPC.spawn(PARAM.STATUEID, npcbreathlocx[index]+160, npcbreathlocy[index], npc:mem(0x146, FIELD_WORD));
+					local icestatue = NPC.spawn(chillpenguin.STATUEID, npcbreathlocx[index]+160, npcbreathlocy[index], npc:mem(0x146, FIELD_WORD));
 					icestatue.direction = npcbreathdir[index];
-					icestatue = NPC.spawn(PARAM.STATUEID, npcbreathlocx[index]+80, npcbreathlocy[index], npc:mem(0x146, FIELD_WORD));
+					icestatue = NPC.spawn(chillpenguin.STATUEID, npcbreathlocx[index]+80, npcbreathlocy[index], npc:mem(0x146, FIELD_WORD));
 					icestatue.direction = npcbreathdir[index];
 				end
 				
@@ -1396,30 +1396,30 @@ function playerblizzardvel(playerid, section)
 		end
 	end
 	if blizdir[section] == -1 then
-		if playerid.speedX >= Defines.player_runspeed-PARAM.BLIZPOW then
-			playerid.speedX = Defines.player_runspeed-PARAM.BLIZPOW;
+		if playerid.speedX >= Defines.player_runspeed-chillpenguin.BLIZPOW then
+			playerid.speedX = Defines.player_runspeed-chillpenguin.BLIZPOW;
 		elseif playerid.rightKeyPressing then
-			playerid.speedX	= playerid.speedX+(accel-PARAM.BLIZPOW);
+			playerid.speedX	= playerid.speedX+(accel-chillpenguin.BLIZPOW);
 		elseif playerid.leftKeyPressing then
-			playerid.speedX	= playerid.speedX-(accel+PARAM.BLIZPOW);
+			playerid.speedX	= playerid.speedX-(accel+chillpenguin.BLIZPOW);
 		else
 			if playerid.speedX == 0 then
 				playerid.speedX = -0.5;
 			end
-			playerid.speedX = playerid.speedX-PARAM.BLIZPOW;
+			playerid.speedX = playerid.speedX-chillpenguin.BLIZPOW;
 		end
 	elseif blizdir[section] == 1 then
-		if playerid.speedX <= (Defines.player_runspeed*-1)+PARAM.BLIZPOW then
-			playerid.speedX = (Defines.player_runspeed*-1)+PARAM.BLIZPOW;
+		if playerid.speedX <= (Defines.player_runspeed*-1)+chillpenguin.BLIZPOW then
+			playerid.speedX = (Defines.player_runspeed*-1)+chillpenguin.BLIZPOW;
 		elseif playerid.rightKeyPressing then
-			playerid.speedX	= playerid.speedX+(accel+PARAM.BLIZPOW);
+			playerid.speedX	= playerid.speedX+(accel+chillpenguin.BLIZPOW);
 		elseif playerid.leftKeyPressing then
-			playerid.speedX	= playerid.speedX-(accel-PARAM.BLIZPOW);
+			playerid.speedX	= playerid.speedX-(accel-chillpenguin.BLIZPOW);
 		else
 			if playerid.speedX == 0 then
 				playerid.speedX = 0.5;
 			end
-			playerid.speedX = playerid.speedX+PARAM.BLIZPOW;
+			playerid.speedX = playerid.speedX+chillpenguin.BLIZPOW;
 		end
 	end
 end
@@ -1441,9 +1441,9 @@ function npcinitialize(index, npc)
 	npctimeaction[index] = 100;
 	npcprimemove[index] = 0;
 	if npc.legacyBoss then
-		npchealth[index] = PARAM.MAXHP[2];
+		npchealth[index] = chillpenguin.MAXHP[2];
 	else
-		npchealth[index] = PARAM.MAXHP[1];
+		npchealth[index] = chillpenguin.MAXHP[1];
 	end
 	npchurt[index] = -2;
 	npcmovetype[index] = 0;
@@ -1489,15 +1489,15 @@ function projinitialize(index, proj)
 	projdead[index] = false;
 	projlastframe[index] = 0;
 	projtimeframe[index] = 30;
-	if proj.id == PARAM.ICEBALLID then
+	if proj.id == chillpenguin.ICEBALLID then
 		projdirection[index] = proj.direction;
 		projhealth[index] = 1;
 		if proj.speedY < 0 then
 			projstate[index] = 1;
-			projxvel[index]	= PARAM.ICEBALLSPDX*0.75;
+			projxvel[index]	= chillpenguin.ICEBALLSPDX*0.75;
 		else
 			projstate[index] = 2;
-			projxvel[index]	= PARAM.ICEBALLSPDX;
+			projxvel[index]	= chillpenguin.ICEBALLSPDX;
 		end
 		projlastxpos[index] = 0;
 		if projdirection[index] == -1 then
@@ -1508,11 +1508,11 @@ function projinitialize(index, proj)
 		projhealth[index] = 0;
 		projregister[index] = 2;
 		proj.dontMove = true;
-	elseif proj.id == PARAM.STATUEID then
+	elseif proj.id == chillpenguin.STATUEID then
 		projstate[index] = 0;
 		projdirection[index] = proj.direction;
 		projxvel[index] = 0;
-		projhealth[index] = PARAM.STATUEMAXHP;
+		projhealth[index] = chillpenguin.STATUEMAXHP;
 		projlastxpos[index] = 0;
 		proj.dontMove = true;
 		projregister[index] = 2;
@@ -1677,4 +1677,4 @@ function npctargetisvalid(index, npc)
 	return false;
 end
 
-return chillpenguinAPI;
+return chillpenguin;
