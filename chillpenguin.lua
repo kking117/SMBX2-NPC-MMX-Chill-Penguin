@@ -12,6 +12,7 @@ local atkarray = 0;
 local slidearray = 0;
 local npchurtindex = 0;
 local PARAM = {};
+local players = {};
 
 -------------------
 --BEHAVIOUR STUFF--
@@ -210,9 +211,9 @@ PARAM.PULLYOFFSET = {4, 48};
 ---------------
 --ARRAY STUFF--
 ---------------
---controls the blizzard
-local blizdur = 0;
-local blizdir = 0;
+--controls the blizzard for each section
+local blizdur = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+local blizdir = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
 --gets the npc uid of each npc
 local npctable = {};
@@ -279,6 +280,8 @@ local npcbreathlocy = {};
 local npcbreathdir = {};
 --kills of the npc if true
 local npcdead = {};
+--determines which player the npc is focusing
+local npctarget = {};
 
 --gets the npc uid of projectile
 local projtable = {};
@@ -351,17 +354,34 @@ blizzardr:AttachToCamera(Camera.get()[1]);
 
 function chillpenguinAPI.onCameraUpdate()
 	if Defines.levelFreeze == false then
-		if blizdur >= 1 then
-			if blizdir == -1 then
-				blizzardl:Draw();
-			elseif blizdir == 1 then
-				blizzardr:Draw();
+		for section, duration in pairs(blizdur) do
+			if blizdur[section] >= 1 then
+				if players[1].section+1 == section then
+					if blizdir[section] == -1 then
+						blizzardl:Draw();
+					elseif blizdir[section] == 1 then
+						blizzardr:Draw();
+					end
+					playerblizzardvel(players[1], section);
+				end
+				if players[1] ~= players[2] and players[2].section+1 == section then
+					if players[2].section ~= players[1].section then
+						if blizdir[section] == -1 then
+							blizzardl:Draw();
+						elseif blizdir[section] == 1 then
+							blizzardr:Draw();
+						end
+					end
+					playerblizzardvel(players[2], section);
+				end
+				blizdur[section] = blizdur[section]-1;
 			end
 		end
 	end
 end
 
 function chillpenguinAPI.onTick()
+	validateplayers();
 	if npctable[npchurtindex] ~= nil and  npctable[npchurtindex].isValid then
 		Graphics.drawImage(hpboarder, 740, 120);
 		if npchealth[npchurtindex] >= 1 then
@@ -374,18 +394,18 @@ function chillpenguinAPI.onTick()
 			Graphics.drawImage(hpfill, 748, 128+healthoffset, 0, 0, 12, 126-healthoffset);
 		end
 	end
-	for k, v in pairs(NPC.get({PARAM.ICEBALLID, PARAM.STATUEID}, player.section)) do
-		if projisknown(v) == false and v:mem(0x64, FIELD_BOOL) == false and v:mem(0x40, FIELD_BOOL) == false then
+	for k, v in pairs(NPC.get({PARAM.ICEBALLID, PARAM.STATUEID}, {players[1].section, players[2].section})) do
+		if projisknown(v) == false and isvalidnpc(v) then
 			assignproj(v);
 		end
 	end
-	for k, v in pairs(NPC.get(PARAM.PENGID, player.section)) do
-		if npcisknown(v) == false and v:mem(0x64, FIELD_BOOL) == false and v:mem(0x40, FIELD_BOOL) == false then
+	for k, v in pairs(NPC.get(PARAM.PENGID, {players[1].section, players[2].section})) do
+		if npcisknown(v) == false and isvalidnpc(v) then
 			assignnpc(v);
 		end
 	end
 	for index, npc in pairs(npctable) do
-		if npc.isValid and npc:mem(0x64, FIELD_BOOL) == false and npc.id ~= 263 then
+		if npc.isValid and npc.id ~= 263 then
 			if npcregister[index] ~= 2 then
 				npcinitialize(index, npc);
 			end
@@ -402,7 +422,11 @@ function chillpenguinAPI.onTick()
 			if npcbreathframe[index] <= 12 then
 				icebreath(index, npc);
 			end
+			local heldplayer = getholdingplayer(index, npc);
 			if Defines.levelFreeze == false then
+				if npctargetisvalid(index, npc) == false then
+					npcassigntarget(index, npc);
+				end
 				if npcdead[index] then
 					npc:harm();
 				else
@@ -443,8 +467,8 @@ function chillpenguinAPI.onTick()
 							if npcmovetype[index] == 4 and (touchedpully(index, npc, false) ~= nil and npcprimemove[index] <= 0) or npcmovetype[index] == 4 and (touchedpully(index, npc, true) ~=nil and npcprimemove[index] >= 0) then
 								if  npcprimemove[index] <= 0 then
 									npcprimemove[index] = PARAM.PULLYDUR;
-									blizdur = PARAM.BLIZDUR;
-									blizdir = npcdirection[index];
+									blizdur[getnpcsection(npc)+1] = PARAM.BLIZDUR;
+									blizdir[getnpcsection(npc)+1] = npcdirection[index];
 								elseif npcprimemove[index] >= 1 then
 									npcprimemove[index] = npcprimemove[index]-1;
 									npcxvel[index] = 0;
@@ -531,11 +555,19 @@ function chillpenguinAPI.onTick()
 					--ANIMATION CODE--
 					------------------
 					if npcstate[index] == 1 or npcstate[index] == 0 then
-						if npchurt[index] >= 0 then
-							if npcdirection[index] == -1 then
+						if npchurt[index] >= 0 or heldplayer ~= nil then
+							if heldplayer == nil then
+								if npcdirection[index] == -1 then
+									npclastframe[index] = PARAM.HURTFRAME;
+									npc.animationFrame = npclastframe[index];
+								elseif npcdirection[index] == 1 then
+									npclastframe[index] = PARAM.HURTFRAME+1;
+									npc.animationFrame = npclastframe[index];
+								end
+							elseif getplayerdirection(heldplayer) == -1 then
 								npclastframe[index] = PARAM.HURTFRAME;
 								npc.animationFrame = npclastframe[index];
-							elseif npcdirection[index] == 1 then
+							elseif getplayerdirection(heldplayer) == 1 then
 								npclastframe[index] = PARAM.HURTFRAME+1;
 								npc.animationFrame = npclastframe[index];
 							end
@@ -729,14 +761,14 @@ function chillpenguinAPI.onTick()
 							end
 						end
 					elseif proj.id == PARAM.STATUEID then
-						if blizdur >= 1 then
-							if blizdir == -1 then
+						if blizdur[getnpcsection(proj)+1] >= 1 then
+							if blizdir[getnpcsection(proj)+1] == -1 then
 								if proj.underwater then
 									projxvel[index] = projxvel[index]-(PARAM.BLIZPOW*PARAM.STATUEWATERXMULT);
 								else
 									projxvel[index] = projxvel[index]-PARAM.BLIZPOW;
 								end
-							elseif blizdir == 1 then
+							elseif blizdir[getnpcsection(proj)+1] == 1 then
 								if proj.underwater then
 									projxvel[index] = projxvel[index]+(PARAM.BLIZPOW*PARAM.STATUEWATERXMULT);
 								else
@@ -789,42 +821,6 @@ function chillpenguinAPI.onTick()
 		elseif proj.isValid and proj.id == 263 then
 		else
 			projunregister(index, proj);
-		end
-	end
-	if Defines.levelFreeze == false then
-		if blizdur >= 1 then
-			blizdur = blizdur-1;
-			local accel = 0.2;
-			if player.runKeyPressing or player.altrunKeyPressing then
-				accel = 0.35;
-			end
-			if blizdir == -1 then
-				if player.speedX >= Defines.player_runspeed-PARAM.BLIZPOW then
-					player.speedX = Defines.player_runspeed-PARAM.BLIZPOW;
-				elseif player.rightKeyPressing then
-					player.speedX	= player.speedX+(accel-PARAM.BLIZPOW);
-				elseif player.leftKeyPressing then
-					player.speedX	= player.speedX-(accel+PARAM.BLIZPOW);
-				else
-					if player.speedX == 0 then
-						player.speedX = -0.5;
-					end
-					player.speedX = player.speedX-PARAM.BLIZPOW;
-				end
-			elseif blizdir == 1 then
-				if player.speedX <= (Defines.player_runspeed*-1)+PARAM.BLIZPOW then
-					player.speedX = (Defines.player_runspeed*-1)+PARAM.BLIZPOW;
-				elseif player.rightKeyPressing then
-					player.speedX	= player.speedX+(accel+PARAM.BLIZPOW);
-				elseif player.leftKeyPressing then
-					player.speedX	= player.speedX-(accel-PARAM.BLIZPOW);
-				else
-					if player.speedX == 0 then
-						player.speedX = 0.5;
-					end
-					player.speedX = player.speedX+PARAM.BLIZPOW;
-				end
-			end
 		end
 	end
 end
@@ -1017,8 +1013,8 @@ function calcnpcleap(index, npc)
 	end
 	if pullyx ~= nil then
 		if npc.underwater then
-			if npc.x - pullyx >= 1 then
-				npcxvel[index] = (npc.x - pullyx)*-PARAM.JUMPDISTMULTW;
+			if npc.x+PARAM.WIDTH - pullyx >= 1 then
+				npcxvel[index] = (npc.x+PARAM.WIDTH - pullyx)*-PARAM.JUMPDISTMULTW;
 				npcdirection[index] = -1;
 			elseif npc.x - pullyx <= 1 then
 				npcxvel[index] = (npc.x - pullyx)*-PARAM.JUMPDISTMULTW;
@@ -1026,8 +1022,8 @@ function calcnpcleap(index, npc)
 			end
 			npc.speedY = PARAM.JUMPHEIGHTW;
 		else
-			if npc.x - pullyx >= 1 then
-				npcxvel[index] = (npc.x - pullyx)*-PARAM.JUMPDISTMULT;
+			if npc.x+PARAM.WIDTH - pullyx >= 1 then
+				npcxvel[index] = (npc.x+PARAM.WIDTH - pullyx)*-PARAM.JUMPDISTMULT;
 				npcdirection[index] = -1;
 			elseif npc.x - pullyx <= 1 then
 				npcxvel[index] = (npc.x - pullyx)*-PARAM.JUMPDISTMULT;
@@ -1038,31 +1034,31 @@ function calcnpcleap(index, npc)
 	elseif pullyx == nil then
 		if npc.underwater then
 			if npcdirection[index] == 1 then
-				if npc.x+PARAM.WIDTH  - player.x >= 1 or npc.x+PARAM.WIDTH  - player.x < -PARAM.JUMPSEARCHDIST then
+				if npc.x+PARAM.WIDTH  -  npctarget[index].x >= 1 or npc.x+PARAM.WIDTH  -  npctarget[index].x < -PARAM.JUMPSEARCHDIST then
 					npcxvel[index] = rng.randomInt(2,(PARAM.JUMPSEARCHDIST*PARAM.JUMPDISTMULTW));
 				else
-					npcxvel[index] = (npc.x - player.x)*-PARAM.JUMPDISTMULTW;
+					npcxvel[index] = (npc.x -  npctarget[index].x)*-PARAM.JUMPDISTMULTW;
 				end
 			elseif npcdirection[index] == -1 then
-				if npc.x - player.x <= -1 or npc.x - player.x > PARAM.JUMPSEARCHDIST then
+				if npc.x -  npctarget[index].x <= -1 or npc.x -  npctarget[index].x > PARAM.JUMPSEARCHDIST then
 					npcxvel[index] = rng.randomInt(-2,(PARAM.JUMPSEARCHDIST*-PARAM.JUMPDISTMULTW));
 				else
-					npcxvel[index] = (npc.x - player.x)*-PARAM.JUMPDISTMULTW;
+					npcxvel[index] = (npc.x -  npctarget[index].x)*-PARAM.JUMPDISTMULTW;
 				end
 			end
 			npc.speedY = PARAM.JUMPHEIGHTW;
 		else
 			if npcdirection[index] == 1 then
-				if npc.x+PARAM.WIDTH - player.x >= 1 or npc.x+PARAM.WIDTH  - player.x < -PARAM.JUMPSEARCHDIST then
+				if npc.x+PARAM.WIDTH -  npctarget[index].x >= 1 or npc.x+PARAM.WIDTH  -  npctarget[index].x < -PARAM.JUMPSEARCHDIST then
 					npcxvel[index] = rng.randomInt(2,(PARAM.JUMPSEARCHDIST*PARAM.JUMPDISTMULT));
 				else
-					npcxvel[index] = (npc.x - player.x)*-PARAM.JUMPDISTMULT;
+					npcxvel[index] = (npc.x -  npctarget[index].x)*-PARAM.JUMPDISTMULT;
 				end
 			elseif npcdirection[index] == -1 then
-				if npc.x - player.x <= -1 or npc.x - player.x > PARAM.JUMPSEARCHDIST then
+				if npc.x -  npctarget[index].x <= -1 or npc.x -  npctarget[index].x > PARAM.JUMPSEARCHDIST then
 					npcxvel[index] = rng.randomInt(-2,(PARAM.JUMPSEARCHDIST*-PARAM.JUMPDISTMULT));
 				else
-					npcxvel[index] = (npc.x - player.x)*-PARAM.JUMPDISTMULT;
+					npcxvel[index] = (npc.x -  npctarget[index].x)*-PARAM.JUMPDISTMULT;
 				end
 			end
 
@@ -1074,11 +1070,11 @@ end
 --calculates which direction chill penguin should face
 function calcnpcdirection(index, npc)
 	if npcdirection[index] == 1 then
-		if npc.x - player.x >= 1 then
+		if npc.x - npctarget[index].x >= 1 then
 			npcdirection[index] = -1;
 		end
 	elseif npcdirection[index] == -1 then
-		if npc.x+PARAM.WIDTH - player.x <= -1 then
+		if npc.x+PARAM.WIDTH -  npctarget[index].x <= -1 then
 			npcdirection[index] = 1;
 		end
 	end
@@ -1300,7 +1296,7 @@ end
 --a function that controls chill penguin's ice breath
 --because it's complicated/something I haven't done before
 function icebreath(index, npc)
-	if npc.collidesBlockBottom then
+	if npc.collidesBlockBottom and getholdingplayer(index, npc) == nil then
 		if Defines.levelFreeze == false then
 			if npcbreathdir[index] == -1 then
 				npcbreathlocx[index] = npc.x;
@@ -1350,14 +1346,14 @@ function icebreath(index, npc)
 					local playertable = Player.getIntersecting(npcbreathlocx[index]-(192-fbxone[npcbreathframe[index]]), npcbreathlocy[index], npcbreathlocx[index]+fbxtwo[npcbreathframe[index]], npcbreathlocy[index]+fbframey);
 					for index, v in pairs(playertable) do
 						if index ~= nil then
-							player:harm();
+							v:harm();
 						end
 					end
 				elseif npcbreathdir[index] == 1 then
 					local playertable = Player.getIntersecting(npcbreathlocx[index]-fbxtwo[npcbreathframe[index]], npcbreathlocy[index], npcbreathlocx[index]+(192-fbxone[npcbreathframe[index]]), npcbreathlocy[index]+fbframey);
 					for index, v in pairs(playertable) do
 						if index ~= nil then
-							player:harm();
+							v:harm();
 						end
 					end
 				end
@@ -1370,9 +1366,61 @@ function icebreath(index, npc)
 				Graphics.drawImageToScene(fbr, npcbreathlocx[index], npcbreathlocy[index], 0,((npcbreathframe[index]-1)*34),196,34);
 			end
 		end
-		
 	else
 		npcbreathframe[index] = 13;
+	end
+end
+
+--applies velocity to the player when in a blizzard
+function playerblizzardvel(playerid, section)
+	local accel = 0.2;
+	if playerid.character == 2 then -- luigi speed up and slows down slower
+		if playerid.runKeyPressing or playerid.altrunKeyPressing then
+			accel = 0.32;
+		else
+			accel = 0.175;
+		end
+	elseif playerid.character == 4 then -- toad runs faster
+		if playerid.runKeyPressing or playerid.altrunKeyPressing then
+			accel = 0.4375;
+		else
+			accel = 0.25;
+		end
+	elseif playerid.character == 5 then -- link doesn't run
+		accel = 0.275;
+	else
+		if playerid.runKeyPressing or playerid.altrunKeyPressing then
+			accel = 0.35;
+		else
+			accel = 0.2;
+		end
+	end
+	if blizdir[section] == -1 then
+		if playerid.speedX >= Defines.player_runspeed-PARAM.BLIZPOW then
+			playerid.speedX = Defines.player_runspeed-PARAM.BLIZPOW;
+		elseif playerid.rightKeyPressing then
+			playerid.speedX	= playerid.speedX+(accel-PARAM.BLIZPOW);
+		elseif playerid.leftKeyPressing then
+			playerid.speedX	= playerid.speedX-(accel+PARAM.BLIZPOW);
+		else
+			if playerid.speedX == 0 then
+				playerid.speedX = -0.5;
+			end
+			playerid.speedX = playerid.speedX-PARAM.BLIZPOW;
+		end
+	elseif blizdir[section] == 1 then
+		if playerid.speedX <= (Defines.player_runspeed*-1)+PARAM.BLIZPOW then
+			playerid.speedX = (Defines.player_runspeed*-1)+PARAM.BLIZPOW;
+		elseif playerid.rightKeyPressing then
+			playerid.speedX	= playerid.speedX+(accel+PARAM.BLIZPOW);
+		elseif playerid.leftKeyPressing then
+			playerid.speedX	= playerid.speedX-(accel-PARAM.BLIZPOW);
+		else
+			if playerid.speedX == 0 then
+				playerid.speedX = 0.5;
+			end
+			playerid.speedX = playerid.speedX+PARAM.BLIZPOW;
+		end
 	end
 end
 
@@ -1408,6 +1456,7 @@ function npcinitialize(index, npc)
 	npcbreathlocy[index] = 0;
 	npcbreathdir[index] = 0;
 	npcdead[index] = false;
+	npcassigntarget(index, npc);
 end
 
 --clears a npc's variables when it's no longer valid
@@ -1540,6 +1589,92 @@ function getprojindex(proj)
 		end
 	end
 	return index;
+end
+
+function isvalidnpc(npc)
+	if npc.isValid == false then
+		return false;
+	elseif npc:mem(0x64, FIELD_BOOL) then
+		return false;
+	elseif npc:mem(0x40, FIELD_BOOL) then
+		return false;
+	end
+	if players[1].section == npc:mem(0x146, FIELD_WORD) then
+		return true;
+	elseif players[2].section == npc:mem(0x146, FIELD_WORD) then
+		return true;
+	end
+	return false;
+end
+
+function getnpcsection(npc)
+	if npc:mem(0x146, FIELD_WORD) ~= nil then
+		return npc:mem(0x146, FIELD_WORD);
+	end
+	return 1;
+end
+
+function validateplayers()
+	players[1] = player;
+	if player2 ~= nil then
+		players[2] = player2;
+	else
+		players[2] = player;
+	end
+end
+
+--sets chill penguin's target
+function npcassigntarget(index, npc)
+	if players[1] ~= players[2] then
+		if players[1].section == getnpcsection(npc) and players[2].section == getnpcsection(npc) then
+			npctarget[index] = players[rng.randomInt(1,2)];
+		elseif players[1].section == getnpcsection(npc) and players[2].section ~= getnpcsection(npc) then
+			npctarget[index] = players[1];
+		elseif players[1].section ~= getnpcsection(npc) and players[2].section == getnpcsection(npc) then
+			npctarget[index] = players[2];
+		end
+	else
+		if players[1].section ~= getnpcsection(npc) then
+			npcregister[index] = -1; --its no longer with the player so we can stop runnning the code
+		else
+			npctarget[index] = players[1];
+		end
+	end
+end
+
+function getplayerdirection(playerid)
+	return playerid:mem(0x106, FIELD_WORD);
+end
+
+function getholdingplayer(index, npc)
+	if npc:mem(0x12C, FIELD_WORD) == 1 then
+		npcstate[index] = 1;
+		npctimeaction[index] = 20;
+		return player;
+	elseif npc:mem(0x12C, FIELD_WORD) == 2 then
+		npcstate[index] = 1;
+		npctimeaction[index] = 20;
+		return player2;
+	else
+		return nil;
+	end
+end
+
+--checks if chill penguin's target is still valid
+function npctargetisvalid(index, npc)
+	if npctarget[index] == nil then
+		return false;
+	end
+	if npctarget[index] == players[1] then
+		if getnpcsection(npc) == players[1].section then
+			return true;
+		end
+	elseif npctarget[index] == players[2] then
+		if getnpcsection(npc) == players[2].section then
+			return true;
+		end
+	end
+	return false;
 end
 
 return chillpenguinAPI;
