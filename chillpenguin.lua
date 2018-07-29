@@ -282,6 +282,8 @@ local npcbreathdir = {};
 local npcdead = {};
 --determines which player the npc is focusing
 local npctarget = {};
+--determines if the npc was set to dontmove in the editor
+local npcdefaultmove = {};
 
 --gets the npc uid of projectile
 local projtable = {};
@@ -405,7 +407,8 @@ function chillpenguin.onTick()
 		end
 	end
 	for index, npc in pairs(npctable) do
-		if npc.isValid and npc.id ~= 263 then
+		if npcregister[index] == -1 then
+		elseif isvalidnpc(npc) and npc.id ~= 263 then
 			if npcregister[index] ~= 2 then
 				npcinitialize(index, npc);
 			end
@@ -689,7 +692,7 @@ function chillpenguin.onTick()
 				end
 			end
 			npc.animationTimer = 0;
-		elseif npc.isValid and (npc:mem(0x64, FIELD_BOOL) or npc.id == 263) then
+		elseif isvalidnpc(npc) and npc.id == 263 then
 			if npcregister[index] == 2 then
 				if Defines.levelFreeze == false then
 					if npc.id == 263 then
@@ -716,7 +719,8 @@ function chillpenguin.onTick()
 		end
 	end
 	for index, proj in pairs(projtable) do
-		if proj.isValid and proj.id ~= 263 then
+		if projregister[index] == -1 then
+		elseif proj.isValid and proj.id ~= 263 then
 			if projregister[index] ~= 2 then
 				projinitialize(index, proj);
 			end
@@ -893,7 +897,9 @@ function chillpenguin.onNPCKill(event, npc, reason)
 						npcxvel[index] = -3;
 						npc.speedY = -7;
 					end
-					setstate(index, npc, 1);
+					if npcstate[index] ~= 0 then
+						setstate(index, npc, 1);
+					end
 					npcmovetype[index] = 0;
 					npchurt[index] = 5;
 					if chillpenguin.AIRIFRAMES then
@@ -1431,6 +1437,7 @@ function npcinitialize(index, npc)
 	else
 		npcstate[index] = 1;
 	end
+	npcdefaultmove[index] = npc.dontMove;
 	npc.dontMove = true;
 	npcxvel[index] = 0;
 	npclastxpos[index] = 0;
@@ -1464,6 +1471,10 @@ end
 function npcunregister(index, npc)
 	npcregister[index] = -1;
 	npcdead[index] = false;
+	if npc.isValid then
+		npc.dontMove = npcdefaultmove[index];
+	end
+	
 end
 
 --finds an array that was used but is now empty to assign the new chill penguins to
@@ -1553,7 +1564,7 @@ end
 
 function npcisknown (npc)
 	for index, v in pairs(npctable) do
-		if pNPC.wrap(npc) == v then
+		if pNPC.wrap(npc) == v and npcregister[index] ~= -1 then
 			return true;
 		end
 	end
